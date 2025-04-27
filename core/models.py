@@ -71,3 +71,24 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'Notification {self.id} for user {self.user.email}'
+
+
+class CreatineProduct(models.Model):
+    SIZE_CHOICES = [
+        ('100', '100'),
+        ('200', '200'),
+        ('500', '500'),
+        ('1000', '1000'),
+    ]
+
+    company_name = models.CharField(_("Company's Name"), max_length=255)
+    product_name = models.CharField(_("Product's Name"), max_length=255)
+    picture = models.ImageField(_('Picture'), upload_to='creatines', max_length=255)
+    price = models.DecimalField(_('Price'), max_digits=5, decimal_places=2)
+    discount = models.DecimalField(_('Discount'), max_digits=3, decimal_places=1, blank=True, default=0)
+    size = models.CharField(_('Size'), max_length=4, default=200)
+    link = models.URLField(_('Link'))
+    partner_id = models.CharField(_('Partner ID'), max_length=255)
+
+    def __str__(self):
+        return f'Company: {self.company_name}, Product: {self.product_name}'
