@@ -58,3 +58,16 @@ class CustomUser(AbstractUser):
 
 class SmartBottle(models.Model):
     name = models.CharField(_("bottle's name"), max_length=250) # Just for now
+
+    def __str__(self):
+        return self.name
+
+
+class Notification(models.Model):
+    message = models.CharField(_('Message'), max_length=355)
+    seen = models.BooleanField(_('Seen'), default=False)
+    date_created = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'Notification {self.id} for user {self.user.email}'
