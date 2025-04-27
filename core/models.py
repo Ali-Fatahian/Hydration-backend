@@ -105,3 +105,16 @@ class CreatineProduct(models.Model):
 
     def __str__(self):
         return f'Company: {self.company_name}, Product: {self.product_name}'
+
+
+class WaterConsumption(models.Model):
+    max_water_intake = models.DecimalField(_('Max Water Intake'), max_digits=4,
+                                            decimal_places=0) # Our suggestion
+    user_water_intake = models.DecimalField(_('User Water Intake'),
+                                             max_digits=4, decimal_places=0)
+    date_created = models.DateTimeField(_('Date Created'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Updated At'), auto_now=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'User {self.user.email} water intake on {self.date_created}'
