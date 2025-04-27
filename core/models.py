@@ -98,7 +98,8 @@ class CreatineProduct(models.Model):
     price = models.DecimalField(_('Price'), max_digits=5, decimal_places=2)
     discount = models.DecimalField(_('Discount'), max_digits=3, decimal_places=1
                                    , blank=True, default=0)
-    size = models.CharField(_('Size'), max_length=4, default=200)
+    size = models.CharField(_('Size'), choices=SIZE_CHOICES,
+                            max_length=4, default=200)
     link = models.URLField(_('Link'))
     partner_id = models.CharField(_('Partner ID'), max_length=255)
 
