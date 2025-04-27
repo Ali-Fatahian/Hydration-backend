@@ -79,6 +79,10 @@ class Notification(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
+    def mark_as_seen(self):
+        self.seen = True
+        self.save(update_fields=['seen'])
+
     def __str__(self):
         return f'Notification {self.id} for user {self.user.email}'
 
