@@ -38,19 +38,29 @@ class CustomUser(AbstractUser):
 
     email = models.EmailField(_("email address"), unique=True)
     fullname = models.CharField(_("full name"), max_length=100)
-    picture = models.ImageField(_('picture'), max_length=255, blank=True, null=True)
-    weight = models.DecimalField(_('weight'), max_digits=3, decimal_places=2, blank=True, null=True)
-    gender = models.CharField(_('gender'), max_length=6, choices=GENDER_CHOICES, blank=True, null=True)
-    creatine_intake = models.DecimalField(_('creatine intake'), max_digits=2, decimal_places=1, blank=True, null=True)
+    picture = models.ImageField(_('picture'), max_length=255,
+                                 blank=True, null=True)
+    weight = models.DecimalField(_('weight'), max_digits=3, decimal_places=2,
+                                  blank=True, null=True)
+    gender = models.CharField(_('gender'), max_length=6, choices=GENDER_CHOICES,
+                               blank=True, null=True)
+    creatine_intake = models.DecimalField(_('creatine intake'), 
+                                          max_digits=2, decimal_places=1,
+                                            blank=True, null=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    bottle = models.OneToOneField('SmartBottle', on_delete=models.CASCADE, null=True, blank=True)
+    bottle = models.OneToOneField('SmartBottle', on_delete=models.CASCADE,
+                                   null=True, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ['fullname']
 
     objects = CustomUserManager()
+
+    class Meta:
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
 
     def __str__(self):
         return self.email
@@ -83,9 +93,11 @@ class CreatineProduct(models.Model):
 
     company_name = models.CharField(_("Company's Name"), max_length=255)
     product_name = models.CharField(_("Product's Name"), max_length=255)
-    picture = models.ImageField(_('Picture'), upload_to='creatines', max_length=255)
+    picture = models.ImageField(_('Picture'), upload_to='creatines',
+                                 max_length=255)
     price = models.DecimalField(_('Price'), max_digits=5, decimal_places=2)
-    discount = models.DecimalField(_('Discount'), max_digits=3, decimal_places=1, blank=True, default=0)
+    discount = models.DecimalField(_('Discount'), max_digits=3, decimal_places=1
+                                   , blank=True, default=0)
     size = models.CharField(_('Size'), max_length=4, default=200)
     link = models.URLField(_('Link'))
     partner_id = models.CharField(_('Partner ID'), max_length=255)
