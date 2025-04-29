@@ -1,10 +1,14 @@
+from datetime import timedelta
 from django.contrib.auth import authenticate, get_user_model
-from rest_framework import status
+from django.utils import timezone
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 from . import serializers
+from core.models import Notification
 
 
 class LoginAPIView(APIView):
@@ -44,3 +48,15 @@ class RegisterAPIView(APIView):
         except ValidationError: # Existing email
             return Response({'error': 'This email already exists'}, 
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class NotificationsListAPIView(ListAPIView):
+    serializer_class = serializers.NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self): # Last week's notifications
+        user = self.request.user
+        eight_days_ago = timezone.now() - timedelta(days=8)
+        notifications = Notification.objects.filter(user=user,
+                                            date_created__gt=eight_days_ago)
+        return notifications
