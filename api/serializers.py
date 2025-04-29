@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from core import models
 
@@ -17,6 +18,11 @@ class UserSerializer(ModelSerializer):
         model = User
         fields = ['id', 'email', 'fullname', 'picture', 'weight',
                   'gender', 'creatine_intake', 'date_joined', 'bottle']
+        
+
+class UserLoginSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField()
 
 
 class NotificationSerializer(ModelSerializer):
