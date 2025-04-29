@@ -1,17 +1,16 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
 from core import models
 
 User = get_user_model()
 
-class SmartBottleSerializer(ModelSerializer):
+class SmartBottleSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.SmartBottle
         fields = '__all__'
 
 
-class UserSerializer(ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     bottle = SmartBottleSerializer()
 
     class Meta:
@@ -22,10 +21,16 @@ class UserSerializer(ModelSerializer):
 
 class UserLoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
-    email = serializers.EmailField()
+    email = serializers.EmailField() # Uniqueness of email field causes issues when using ModelSerializer
 
 
-class NotificationSerializer(ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'fullname', 'password']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
     class Meta:
@@ -33,14 +38,14 @@ class NotificationSerializer(ModelSerializer):
         fields = ['id', 'seen', 'date_created', 'user']
 
 
-class CreatineProductSerializer(ModelSerializer):
+class CreatineProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CreatineProduct
         fields = ['id', 'company_name', 'product_name', 'picture',
                   'price', 'discount', 'size', 'link', 'partner_id']
 
 
-class WaterConsumptionSerializer(ModelSerializer):
+class WaterConsumptionSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
     class Meta:

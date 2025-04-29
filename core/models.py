@@ -31,6 +31,8 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
+    username = None
+
     GENDER_CHOICES = [
         ('male', 'Male'),
         ('female', 'Female'),
