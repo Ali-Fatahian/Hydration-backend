@@ -46,7 +46,7 @@ class CreatineProductSerializer(serializers.ModelSerializer):
 
 
 class WaterConsumptionSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = serializers.ReadOnlyField(source='user.email')
 
     class Meta:
         model = models.WaterConsumption

@@ -1,6 +1,8 @@
 from datetime import timedelta
 from django.contrib.auth import authenticate, get_user_model
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from datetime import datetime, time
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,7 +10,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 from . import serializers
-from core.models import Notification
+from core.models import Notification, WaterConsumption
 
 
 class LoginAPIView(APIView):
@@ -60,3 +62,53 @@ class NotificationsListAPIView(ListAPIView):
         notifications = Notification.objects.filter(user=user,
                                             date_created__gt=eight_days_ago)
         return notifications
+
+
+class WaterIntakeListCreatesAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.WaterConsumptionSerializer
+
+    def get(self, request):
+        user = self.request.user
+        now = timezone.localtime()  # uses the current Django timezone
+        start_of_today = datetime.combine(now.date(), time.min, tzinfo=now.tzinfo) # Timezone aware today's date
+        intake_objs = WaterConsumption.objects.filter(user=user,
+                                    date_created__gt=start_of_today)
+        length = len(intake_objs)
+        if length > 1 or length == 1: # If the user already reached maximum water intake and started another activity in the same day > 1
+            result_obj = intake_objs[length-1]
+            serializer = self.serializer_class(result_obj)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'There is no water intakes for today'}, 
+                            status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request): # supposed to be called by AI
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        max_intake = serializer.validated_data['max_water_intake']
+        user = self.request.user
+        WaterConsumption.objects.create(max_water_intake=max_intake, user=user)
+        return Response({'message': 'Created successfully'},
+                         status=status.HTTP_201_CREATED)
+
+
+class WaterIntakeDetailsAPIView(APIView):
+    def patch(self, request, pk): # We only update the user's water intake
+        instance = get_object_or_404(WaterConsumption, id=pk)
+        serializer = serializers.WaterConsumptionSerializer(instance=instance,
+                                                            data=request.data,
+                                                            partial=True)
+        serializer.is_valid(raise_exception=True)
+        if not instance.user == self.request.user:
+            return Response({'error': 'Unauthorized'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        instance.user_water_intake = serializer.validated_data['user_water_intake']
+        try:
+            instance.save()
+        except:
+            return Response({'error': 'Please enter the intake correctly'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'message': 'Updated successfully'},
+                        status=status.HTTP_200_OK)
