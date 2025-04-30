@@ -11,6 +11,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 from . import serializers
 from core.models import Notification, WaterConsumption
+from .mixins import IsOwnerMixin
 
 
 class LoginAPIView(APIView):
@@ -64,7 +65,7 @@ class NotificationsListAPIView(ListAPIView):
         return notifications
 
 
-class WaterIntakeListCreatesAPIView(APIView):
+class WaterIntakeListCreatesAPIView(APIView, IsOwnerMixin):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.WaterConsumptionSerializer
 
@@ -77,6 +78,7 @@ class WaterIntakeListCreatesAPIView(APIView):
         length = len(intake_objs)
         if length > 1 or length == 1: # If the user already reached maximum water intake and started another activity in the same day > 1
             result_obj = intake_objs[length-1]
+            self.check_object_permission(request, result_obj)
             serializer = self.serializer_class(result_obj)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
@@ -93,16 +95,14 @@ class WaterIntakeListCreatesAPIView(APIView):
                          status=status.HTTP_201_CREATED)
 
 
-class WaterIntakeDetailsAPIView(APIView):
+class WaterIntakeDetailsAPIView(APIView, IsOwnerMixin):
     def patch(self, request, pk): # We only update the user's water intake
         instance = get_object_or_404(WaterConsumption, id=pk)
         serializer = serializers.WaterConsumptionSerializer(instance=instance,
                                                             data=request.data,
                                                             partial=True)
+        self.check_object_permission(request, instance)
         serializer.is_valid(raise_exception=True)
-        if not instance.user == self.request.user:
-            return Response({'error': 'Unauthorized'},
-                            status=status.HTTP_401_UNAUTHORIZED)
         instance.user_water_intake = serializer.validated_data['user_water_intake']
         try:
             instance.save()
