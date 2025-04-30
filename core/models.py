@@ -42,7 +42,7 @@ class CustomUser(AbstractUser):
     fullname = models.CharField(_("full name"), max_length=100)
     picture = models.ImageField(_('picture'), max_length=255,
                                  blank=True, null=True)
-    weight = models.DecimalField(_('weight'), max_digits=3, decimal_places=2,
+    weight = models.DecimalField(_('weight'), max_digits=5, decimal_places=2,
                                   blank=True, null=True)
     gender = models.CharField(_('gender'), max_length=6, choices=GENDER_CHOICES,
                                blank=True, null=True)

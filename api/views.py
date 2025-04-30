@@ -6,8 +6,8 @@ from datetime import datetime, time
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
-from rest_framework.exceptions import ValidationError
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.authtoken.models import Token
 from . import serializers
 from core.models import Notification, WaterConsumption
@@ -112,3 +112,21 @@ class WaterIntakeDetailsAPIView(APIView, IsOwnerMixin):
         else:
             return Response({'message': 'Updated successfully'},
                         status=status.HTTP_200_OK)
+
+
+class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = get_user_model().objects.all()
+    serializer_class = serializers.UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        obj = super().get_object()
+        if obj != self.request.user:
+            raise PermissionDenied('You do not have permission to access this object.')
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj != self.request.user:
+            raise PermissionDenied('You do not have permission to access this object.')
+        return super().update(request, *args, **kwargs)
