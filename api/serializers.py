@@ -35,7 +35,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Notification
-        fields = ['id', 'seen', 'date_created', 'user']
+        fields = ['id', 'message', 'seen', 'date_created', 'user']
 
 
 class CreatineProductSerializer(serializers.ModelSerializer):
