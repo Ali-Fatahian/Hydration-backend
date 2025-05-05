@@ -7,7 +7,8 @@ from datetime import datetime, time
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import (ListAPIView, RetrieveUpdateAPIView,
+                                     RetrieveAPIView)
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.authtoken.models import Token
 from . import serializers
@@ -109,6 +110,15 @@ class NotificationDetailsAPIView(APIView, IsOwnerMixin):
         else:
             return Response({'message': 'Updated successfully'},
                         status=status.HTTP_200_OK)
+        
+
+class LatestNotificationDetailsAPIView(RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.NotificationSerializer
+
+    def get_object(self):
+        return Notification.objects.filter(user=
+        self.request.user).order_by('-date_created').first()
 
 
 class WaterIntakeListCreatesAPIView(APIView, IsOwnerMixin):

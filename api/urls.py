@@ -1,8 +1,9 @@
 from django.urls import path
 from .views import (LoginAPIView, RegisterAPIView,
                     NotificationsListAPIView, TodayNotificationsListAPIView, 
-                    NotificationDetailsAPIView, WaterIntakeListCreatesAPIView,
-                    WaterIntakeDetailsAPIView, UserRetrieveUpdateAPIView)
+                    NotificationDetailsAPIView, LatestNotificationDetailsAPIView,
+                    WaterIntakeListCreatesAPIView, WaterIntakeDetailsAPIView,
+                    UserRetrieveUpdateAPIView)
 
 urlpatterns = [
     path('login', LoginAPIView.as_view(), name='login_api'),
@@ -11,6 +12,8 @@ urlpatterns = [
         name='notifications_list_api'),
     path('notifications/<int:pk>', NotificationDetailsAPIView.as_view(),
         name='notification_details_api'),
+    path('latest_notification', LatestNotificationDetailsAPIView.as_view(),
+        name='latest_notification_details_api'),
     path('today_notifications', TodayNotificationsListAPIView.as_view(),
         name='today_notifications_list_api'),
     path('water_intake', WaterIntakeListCreatesAPIView.as_view(),
