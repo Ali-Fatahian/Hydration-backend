@@ -1,4 +1,5 @@
 from datetime import timedelta
+from collections import defaultdict
 from django.contrib.auth import authenticate, get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -53,18 +54,27 @@ class RegisterAPIView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class NotificationsListAPIView(ListAPIView):
+class NotificationsListAPIView(APIView):
     """Notifications History"""
 
-    serializer_class = serializers.NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self): # Last week's notifications
+    def get(self, request): # Last week's notifications
         user = self.request.user
         eight_days_ago = timezone.now() - timedelta(days=8)
+        now = timezone.localtime()
+        start_of_today = datetime.combine(now.date(), time.min, tzinfo=now.tzinfo)
         notifications = Notification.objects.filter(user=user,
-                                            date_created__gt=eight_days_ago)
-        return notifications
+        date_created__gte=eight_days_ago,
+        date_created__lt=start_of_today).order_by('-date_created')
+        
+        grouped = defaultdict(list) # Put notifications made in the same day in one group
+
+        for notif in notifications:
+            date_str = notif.date_created.date().isoformat()
+            grouped[date_str].append(serializers.NotificationSerializer(notif).data)
+
+        return Response(grouped)
     
 
 class TodayNotificationsListAPIView(ListAPIView):
