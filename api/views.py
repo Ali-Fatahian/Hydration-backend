@@ -54,6 +54,8 @@ class RegisterAPIView(APIView):
 
 
 class NotificationsListAPIView(ListAPIView):
+    """Notifications History"""
+
     serializer_class = serializers.NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -63,6 +65,40 @@ class NotificationsListAPIView(ListAPIView):
         notifications = Notification.objects.filter(user=user,
                                             date_created__gt=eight_days_ago)
         return notifications
+    
+
+class TodayNotificationsListAPIView(ListAPIView):
+    """Notification Summary"""
+
+    serializer_class = serializers.NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        now = timezone.localtime()
+        start_of_today = datetime.combine(now.date(), time.min, tzinfo=now.tzinfo)
+        notifications = Notification.objects.filter(user=user,
+                                            date_created__gt=start_of_today)
+        return notifications
+    
+
+class NotificationDetailsAPIView(APIView, IsOwnerMixin):
+    def patch(self, request, pk):
+        instance = get_object_or_404(Notification, id=pk)
+        serializer = serializers.NotificationSerializer(instance=instance,
+                                                            data=request.data,
+                                                            partial=True)
+        self.check_object_permission(request, instance)
+        serializer.is_valid(raise_exception=True)
+        instance.seen = serializer.validated_data['seen']
+        try:
+            instance.save()
+        except:
+            return Response({'error': 'Invalid data'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'message': 'Updated successfully'},
+                        status=status.HTTP_200_OK)
 
 
 class WaterIntakeListCreatesAPIView(APIView, IsOwnerMixin):
