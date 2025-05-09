@@ -4,6 +4,11 @@ from django.contrib.auth import authenticate, get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import datetime, time
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,6 +19,8 @@ from rest_framework.authtoken.models import Token
 from . import serializers
 from core.models import Notification, WaterConsumption
 from .mixins import IsOwnerMixin
+
+User = get_user_model()
 
 
 class LoginAPIView(APIView):
@@ -186,3 +193,49 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
         if obj != self.request.user:
             raise PermissionDenied('You do not have permission to access this object.')
         return super().update(request, *args, **kwargs)
+
+
+class RequestPasswordResetView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = PasswordResetTokenGenerator().make_token(user)
+            reset_link = f"myapp://PasswordResetConfirm?uid={uid}&token={token}"
+            # reset_link = f"http://localhost:8081/PasswordResetConfirm?uid={uid}&token={token}" For browser or sim
+
+            # Send email
+            send_mail(
+                'Reset Your Password',
+                f'Click the link to reset your password: {reset_link}',
+                'no-reply@hydrationIQ.com',
+                [user.email],
+                fail_silently=False,
+            )
+
+            return Response({'message': 'Reset link sent to your email'}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+        new_password = request.data.get('password')
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=uid)
+
+            if PasswordResetTokenGenerator().check_token(user, token):
+                user.set_password(new_password)
+                user.save()
+                return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({'error': 'Invalid request'}, status=status.HTTP_400_BAD_REQUEST)

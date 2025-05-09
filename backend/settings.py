@@ -6,7 +6,7 @@ SECRET_KEY = 'django-insecure-xu-t!)9a139$-$mcj&j%s_&huku(^rstf$v+(9^gy6+kpuggll
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.178.101', '*']
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -112,4 +112,7 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8081',
+    'http://192.168.178.101',
 ]
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

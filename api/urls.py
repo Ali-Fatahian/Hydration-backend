@@ -3,7 +3,8 @@ from .views import (LoginAPIView, RegisterAPIView,
                     NotificationsListAPIView, TodayNotificationsListAPIView, 
                     NotificationDetailsAPIView, LatestNotificationDetailsAPIView,
                     WaterIntakeListCreatesAPIView, WaterIntakeDetailsAPIView,
-                    UserRetrieveUpdateAPIView)
+                    UserRetrieveUpdateAPIView, RequestPasswordResetView,
+                    PasswordResetConfirmView)
 
 urlpatterns = [
     path('login', LoginAPIView.as_view(), name='login_api'),
@@ -17,9 +18,13 @@ urlpatterns = [
     path('today_notifications', TodayNotificationsListAPIView.as_view(),
         name='today_notifications_list_api'),
     path('water_intake', WaterIntakeListCreatesAPIView.as_view(),
-          name='water_intake_api'),
+        name='water_intake_api'),
     path('water_intake_details/<int:pk>', WaterIntakeDetailsAPIView.as_view(),
-          name='water_intake_details_api'),
+        name='water_intake_details_api'),
     path('users/<int:pk>', UserRetrieveUpdateAPIView.as_view(),
          name='user_retrieve_update_api'),
+    path('password_reset', RequestPasswordResetView.as_view(),
+        name='password_reset_api'),
+    path('password_reset_confirm', PasswordResetConfirmView.as_view(),
+        name='password_reset_confirm_api'),
 ]
