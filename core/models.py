@@ -93,6 +93,7 @@ class CreatineProduct(models.Model):
     SIZE_CHOICES = [
         ('100', '100'),
         ('200', '200'),
+        ('400', '400'),
         ('500', '500'),
         ('1000', '1000'),
     ]
