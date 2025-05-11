@@ -17,7 +17,7 @@ from rest_framework.generics import (ListAPIView, RetrieveUpdateAPIView,
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.authtoken.models import Token
 from . import serializers
-from core.models import Notification, WaterConsumption
+from core.models import Notification, WaterConsumption, CreatineProduct
 from .mixins import IsOwnerMixin
 
 User = get_user_model()
@@ -239,3 +239,9 @@ class PasswordResetConfirmView(APIView):
 
         except (User.DoesNotExist, ValueError, TypeError):
             return Response({'error': 'Invalid request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CreatineProductListAPIView(ListAPIView):
+    queryset = CreatineProduct.objects.all()
+    serializer_class = serializers.CreatineProductSerializer
+    permission_classes = [permissions.IsAuthenticated]
