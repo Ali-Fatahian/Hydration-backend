@@ -108,6 +108,8 @@ class CreatineProduct(models.Model):
                             max_length=4, default=200)
     link = models.URLField(_('Link'))
     partner_id = models.CharField(_('Partner ID'), max_length=255)
+    description = models.TextField(_('Description'), max_length=355,
+                                   blank=True, default='', null=True)
 
     def __str__(self):
         return f'Company: {self.company_name}, Product: {self.product_name}'

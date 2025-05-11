@@ -42,7 +42,8 @@ class CreatineProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CreatineProduct
         fields = ['id', 'company_name', 'product_name', 'picture',
-                  'price', 'discount', 'size', 'link', 'partner_id']
+                  'price', 'discount', 'size', 'link', 'partner_id',
+                  'description']
 
 
 class WaterConsumptionSerializer(serializers.ModelSerializer):
