@@ -38,6 +38,12 @@ class CustomUser(AbstractUser):
         ('female', 'Female'),
     ]
 
+    ACTIVITY_CHOICES = [
+        ('low', 'Low'),
+        ('moderate', 'Moderate'),
+        ('high', 'High'),
+    ]
+
     email = models.EmailField(_("email address"), unique=True)
     fullname = models.CharField(_("full name"), max_length=100)
     picture = models.ImageField(_('picture'), max_length=255,
@@ -45,6 +51,9 @@ class CustomUser(AbstractUser):
     weight = models.DecimalField(_('weight'), max_digits=5, decimal_places=2,
                                   blank=True, null=True)
     gender = models.CharField(_('gender'), max_length=6, choices=GENDER_CHOICES,
+                               blank=True, null=True)
+    activity = models.CharField(_('activity'), max_length=8, 
+                                choices=ACTIVITY_CHOICES,
                                blank=True, null=True)
     creatine_intake = models.DecimalField(_('creatine intake'), 
                                           max_digits=2, decimal_places=1,
