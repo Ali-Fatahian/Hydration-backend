@@ -1,5 +1,6 @@
 from datetime import timedelta
 from collections import defaultdict
+import requests
 from django.contrib.auth import authenticate, get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -245,3 +246,137 @@ class CreatineProductListAPIView(ListAPIView):
     queryset = CreatineProduct.objects.all()
     serializer_class = serializers.CreatineProductSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+# import requests
+# import random
+# from datetime import datetime
+# from rest_framework.decorators import api_view
+# from rest_framework.response import Response
+# from rest_framework import status
+
+WEATHER_API_KEY = "1abd54e04598b27a08c1f65af2d7ff2a"
+TOGETHER_API_KEY = "61af2e7656babc2a236f7b1602d5cb5a231d547da701b224273ddae2e114620b"
+TOGETHER_MODEL = "mistralai/Mistral-7B-Instruct-v0.1"
+
+# @api_view(["POST"])
+# def hydration_goal(request):
+#     try:
+#         data = request.data
+#         weight = float(data.get("weight"))
+#         gender = data.get("gender", "").lower()
+#         creatine_dosage = float(data.get("creatine_dosage"))
+#         activity_level = data.get("activity_level", "").lower()
+#         latitude = float(data.get("latitude"))
+#         longitude = float(data.get("longitude"))
+
+#         # Weather data
+#         weather_url = (
+#             f"http://api.openweathermap.org/data/2.5/weather?"
+#             f"lat={latitude}&lon={longitude}&appid={WEATHER_API_KEY}&units=metric"
+#         )
+#         weather_response = requests.get(weather_url)
+#         if weather_response.status_code != 200:
+#             return Response({"error": "Weather API error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#         weather = weather_response.json()
+#         temp_c = weather.get("main", {}).get("temp")
+#         humidity = weather.get("main", {}).get("humidity")
+
+#         if temp_c is None or humidity is None:
+#             return Response({"error": "Missing weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#         # Hydration calculation (EFSA-based)
+#         base = max(2000, weight * 35) if gender == "female" else max(2500, weight * 35)
+#         temp_adjust = max(0, (temp_c - 20) * 10)
+#         activity_map = {"low": 0, "moderate": 350, "high": 700}
+#         activity_adjust = activity_map.get(activity_level, 0)
+#         creatine_adjust = creatine_dosage * 100
+#         humidity_adjust = 200 if humidity > 70 else 100 if humidity >= 50 else 0
+
+#         total_ml = round(base + temp_adjust + activity_adjust + creatine_adjust + humidity_adjust)
+
+#         # AI advice generation
+#         emoji = random.choice(["💧", "🥤", "🚰", "🫗", "🌊", "🏃‍♂️"])
+#         prompt = (
+#             f"A person weighs {weight}kg, is {gender}, exercises at a {activity_level} level, "
+#             f"takes {creatine_dosage}g creatine daily, and lives in {temp_c}°C with {humidity}% humidity. "
+#             f"{emoji} Give a unique motivational hydration tip under 15 words."
+#         )
+
+#         together_response = requests.post(
+#             "https://api.together.xyz/inference",
+#             headers={
+#                 "Authorization": f"Bearer {TOGETHER_API_KEY}",
+#                 "Content-Type": "application/json"
+#             },
+#             json={
+#                 "model": TOGETHER_MODEL,
+#                 "prompt": prompt,
+#                 "max_tokens": 50,
+#                 "temperature": 0.9,
+#                 "top_p": 0.95,
+#                 "repetition_penalty": 1.0
+#             },
+#             timeout=30
+#         )
+
+#         if together_response.status_code != 200:
+#             ai_advice = f"⚠️ Together.ai error {together_response.status_code}"
+#         else:
+#             ai_data = together_response.json()
+#             ai_advice = ai_data.get("output", {}).get("choices", [{}])[0].get("text", "").strip()
+
+#         insights = [
+#             f"Temperature: {temp_c}°C → +{temp_adjust}ml",
+#             f"Humidity: {humidity}% → +{humidity_adjust}ml",
+#             f"Activity level: {activity_level} → +{activity_adjust}ml",
+#             f"Creatine: {creatine_dosage}g → +{creatine_adjust}ml"
+#         ]
+
+#         summary = f"Estimated daily intake: ~{total_ml} ml."
+
+#         return Response({
+#             "date": datetime.now().strftime("%Y-%m-%d"),
+#             "temperature_c": temp_c,
+#             "humidity_percent": humidity,
+#             "hydration_goal_ml": total_ml,
+#             "insight_summary": summary,
+#             "insight_details": insights,
+#             "ai_generated_advice": ai_advice
+#         })
+
+#     except Exception as e:
+#         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class WeatherInfoAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            latitude = float(request.query_params.get("latitude"))
+            longitude = float(request.query_params.get("longitude"))
+
+            weather_url = (
+                f"http://api.openweathermap.org/data/2.5/weather?"
+                f"lat={latitude}&lon={longitude}&appid={WEATHER_API_KEY}&units=metric"
+            )
+            weather_response = requests.get(weather_url)
+            if weather_response.status_code != 200:
+                return Response({"error": "Weather API error"}, status=status.HTTP_400_BAD_REQUEST)
+
+            weather = weather_response.json()
+            temp_c = weather.get("main", {}).get("temp")
+            humidity = weather.get("main", {}).get("humidity")
+
+            if temp_c is None or humidity is None:
+                return Response({"error": "Missing weather data"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({
+                "temperature_celsius": temp_c,
+                "humidity_percent": humidity
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
