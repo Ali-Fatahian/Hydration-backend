@@ -21,7 +21,12 @@ from . import serializers
 from core.models import Notification, WaterConsumption, CreatineProduct
 from .mixins import IsOwnerMixin
 
+import random
+
 User = get_user_model()
+WEATHER_API_KEY = "1abd54e04598b27a08c1f65af2d7ff2a"
+TOGETHER_API_KEY = "61af2e7656babc2a236f7b1602d5cb5a231d547da701b224273ddae2e114620b"
+TOGETHER_MODEL = "mistralai/Mistral-7B-Instruct-v0.1"
 
 
 class LoginAPIView(APIView):
@@ -149,14 +154,133 @@ class WaterIntakeListCreatesAPIView(APIView, IsOwnerMixin):
             return Response({'error': 'There is no water intakes for today'}, 
                             status=status.HTTP_404_NOT_FOUND)
 
-    def post(self, request): # supposed to be called by AI
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        max_intake = serializer.validated_data['max_water_intake']
-        user = self.request.user
-        WaterConsumption.objects.create(max_water_intake=max_intake, user=user)
-        return Response({'message': 'Created successfully'},
-                         status=status.HTTP_201_CREATED)
+    def post(self, request):
+        now = timezone.localtime()
+        start_of_today = datetime.combine(now.date(), time.min, tzinfo=now.tzinfo)
+        intake_objs = WaterConsumption.objects.filter(user=self.request.user,
+                                    date_created__gt=start_of_today)
+        length = len(intake_objs)
+        if length > 1 or length == 1:
+            result_obj = intake_objs[length-1]
+            if result_obj.max_water_intake == result_obj.user_water_intake: # Reached max, make a new one
+                try:
+                    user = self.request.user
+                    temperature_celsius = request.data.get('temperature_celsius')
+                    humidity_percent = int(request.data.get('humidity_percent'))
+                    base = max(2000, user.weight * 35) if user.gender == "female" else max(2500, user.weight * 35)
+                    temp_adjust = max(0, (int(temperature_celsius) - 20) * 10)
+                    humidity_adjust = 200 if humidity_percent > 70 else 100 if humidity_percent >= 50 else 0
+                    activity_map = {"low": 0, "moderate": 350, "high": 700}
+                    activity_adjust = activity_map.get(user.activity, 0)
+                    creatine_adjust = user.creatine_intake * 100
+
+                    total_ml = round(base + temp_adjust + activity_adjust + creatine_adjust + humidity_adjust)
+                    new_obj = WaterConsumption.objects.create(max_water_intake=total_ml, user=user)
+                    
+
+
+
+                    emoji = random.choice(["💧", "🥤", "🚰", "🫗", "🌊", "🏃‍♂️"])
+                    prompt = (
+                        f"A person weighs {user.weight}kg, is {user.gender}, exercises at a {user.activity} level, "
+                        f"takes {user.creatine_intake}g creatine daily, and lives in {temperature_celsius}°C with {humidity_percent}% humidity. "
+                        f"{emoji} Give a unique motivational hydration tip under 15 words."
+                    )
+
+                    together_response = requests.post(
+                        "https://api.together.xyz/inference",
+                        headers={
+                            "Authorization": f"Bearer {TOGETHER_API_KEY}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": TOGETHER_MODEL,
+                            "prompt": prompt,
+                            "max_tokens": 50,
+                            "temperature": 0.9,
+                            "top_p": 0.95,
+                            "repetition_penalty": 1.0
+                        },
+                        timeout=30
+                    )
+
+                    if together_response.status_code != 200:
+                        return Response({'error': 'Together.ai error'}, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        ai_data = together_response.json()
+                        ai_advice = ai_data.get("output", {}).get("choices", [{}])[0].get("text", "").strip()
+                        Notification.objects.create(message=ai_advice, user=self.request.user)
+                    
+                    serializer = serializers.WaterConsumptionSerializer(new_obj)
+                    return Response({'message': serializer.data},
+                                status=status.HTTP_201_CREATED)
+
+                except Exception as e:
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+                return Response({"error": "The current water intake has not finished"}, status=status.HTTP_400_BAD_REQUEST)   
+        else: # If there are no objects for the day
+
+            try:
+                user = self.request.user
+                temperature_celsius = request.data.get('temperature_celsius')
+                humidity_percent = int(request.data.get('humidity_percent'))
+                base = max(2000, user.weight * 35) if user.gender == "female" else max(2500, user.weight * 35)
+                temp_adjust = max(0, (int(temperature_celsius) - 20) * 10)
+                humidity_adjust = 200 if humidity_percent > 70 else 100 if humidity_percent >= 50 else 0
+                activity_map = {"low": 0, "moderate": 350, "high": 700}
+                activity_adjust = activity_map.get(user.activity, 0)
+                creatine_adjust = user.creatine_intake * 100
+                total_ml = round(base + temp_adjust + activity_adjust + creatine_adjust + humidity_adjust)
+                new_obj_1 = WaterConsumption.objects.create(max_water_intake=total_ml, user=user)
+
+                emoji = random.choice(["💧", "🥤", "🚰", "🫗", "🌊", "🏃‍♂️"])
+                prompt = (
+                    f"A person weighs {user.weight}kg, is {user.gender}, exercises at a {user.activity} level, "
+                    f"takes {user.creatine_intake}g creatine daily, and lives in {temperature_celsius}°C with {humidity_percent}% humidity. "
+                    f"{emoji} Give a unique motivational hydration tip under 15 words."
+                )
+
+                together_response = requests.post(
+                    "https://api.together.xyz/inference",
+                    headers={
+                        "Authorization": f"Bearer {TOGETHER_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": TOGETHER_MODEL,
+                        "prompt": prompt,
+                        "max_tokens": 50,
+                        "temperature": 0.9,
+                        "top_p": 0.95,
+                        "repetition_penalty": 1.0
+                    },
+                    timeout=30
+                )
+
+                if together_response.status_code != 200:
+                    return Response({'error': 'Together.ai error'}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    ai_data = together_response.json()
+                    ai_advice = ai_data.get("output", {}).get("choices", [{}])[0].get("text", "").strip()
+                    Notification.objects.create(message=ai_advice, user=self.request.user)
+                    
+                serializer = serializers.WaterConsumptionSerializer(new_obj_1)
+                return Response({'message': serializer.data},
+                                status=status.HTTP_201_CREATED)
+
+    #         insights = [
+    #             f"Temperature: {temp_c}°C → +{temp_adjust}ml",
+    #             f"Humidity: {humidity}% → +{humidity_adjust}ml",
+    #             f"Activity level: {activity_level} → +{activity_adjust}ml",
+    #             f"Creatine: {creatine_dosage}g → +{creatine_adjust}ml"
+    #         ]
+
+    #         summary = f"Estimated daily intake: ~{total_ml} ml."
+
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class WaterIntakeDetailsAPIView(APIView, IsOwnerMixin):
@@ -167,7 +291,10 @@ class WaterIntakeDetailsAPIView(APIView, IsOwnerMixin):
                                                             partial=True)
         self.check_object_permission(request, instance)
         serializer.is_valid(raise_exception=True)
-        instance.user_water_intake = serializer.validated_data['user_water_intake']
+        if serializer.validated_data['user_water_intake'] == instance.max_water_intake or serializer.validated_data['user_water_intake'] > instance.max_water_intake:
+            instance.user_water_intake = instance.max_water_intake
+        else:
+            instance.user_water_intake = serializer.validated_data['user_water_intake']
         try:
             instance.save()
         except:
@@ -254,10 +381,6 @@ class CreatineProductListAPIView(ListAPIView):
 # from rest_framework.decorators import api_view
 # from rest_framework.response import Response
 # from rest_framework import status
-
-WEATHER_API_KEY = "1abd54e04598b27a08c1f65af2d7ff2a"
-TOGETHER_API_KEY = "61af2e7656babc2a236f7b1602d5cb5a231d547da701b224273ddae2e114620b"
-TOGETHER_MODEL = "mistralai/Mistral-7B-Instruct-v0.1"
 
 # @api_view(["POST"])
 # def hydration_goal(request):
