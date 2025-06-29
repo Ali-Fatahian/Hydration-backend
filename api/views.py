@@ -41,7 +41,10 @@ class LoginAPIView(APIView):
 
         if user is not None:
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key, 'id' : user.id}, status=status.HTTP_200_OK)
+            user_serializer = serializers.UserSerializer(user)
+            return Response({'token': token.key, 'id' : user.id,
+                            'user': user_serializer.data},
+                            status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid credentials'},
                              status=status.HTTP_400_BAD_REQUEST)
