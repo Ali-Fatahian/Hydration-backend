@@ -5,7 +5,8 @@ from .views import (LoginAPIView, RegisterAPIView,
                     WaterIntakeListCreatesAPIView, WaterIntakeDetailsAPIView,
                     UserRetrieveUpdateAPIView, RequestPasswordResetView,
                     PasswordResetConfirmView, CreatineProductListAPIView,
-                    WeatherInfoAPIView, UserDetailsCSVExportView)
+                    WeatherInfoAPIView, UserDetailsCSVExportView,
+                    DeleteUserAPIView)
 
 urlpatterns = [
     path('login', LoginAPIView.as_view(), name='login_api'),
@@ -32,5 +33,6 @@ urlpatterns = [
          name='creatine_product_list_api'),
     path('weather_info', WeatherInfoAPIView.as_view(), name='weather_info_api'),
     path('user_details_csv', UserDetailsCSVExportView.as_view(),
-          name='user_details_csv')
+          name='user_details_csv'),
+    path('delete_user', DeleteUserAPIView.as_view(), name='delete_user')
 ]

@@ -450,3 +450,16 @@ class UserDetailsCSVExportView(APIView):
             writer.writerow(['No water intake records found.'])
 
         return response
+
+
+class DeleteUserAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        try:
+            user = get_object_or_404(User, id=self.request.user.id)
+            user.delete()
+            return Response('User Deleted!', status=status.HTTP_204_NO_CONTENT)
+        except:
+            return Response('Something went wrong!',
+                            status=status.HTTP_400_BAD_REQUEST)
