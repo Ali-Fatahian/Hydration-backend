@@ -1,12 +1,18 @@
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from the .env file (if present)
+load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-xu-t!)9a139$-$mcj&j%s_&huku(^rstf$v+(9^gy6+kpuggll'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = ['192.168.178.101', '*']
+ALLOWED_HOSTS = ('*',)
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -64,10 +70,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DEV_NAME'),
+        'USER': os.getenv('POSTGRES_DEV_USER'),
+        'PASSWORD': os.getenv('POSTGRES_DEV_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_DEV_HOST'),
+        'PORT': os.getenv('POSTGRES_DEV_PORT'),
     }
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -110,9 +121,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8081',
-    'http://192.168.178.101',
-]
+CORS_ALLOWED_ORIGINS = ['http://localhost:8081',
+                        'http://192.168.178.101']
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
