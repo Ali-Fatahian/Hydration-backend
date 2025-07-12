@@ -33,6 +33,7 @@ LOCAL_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
+    'drf_spectacular',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -118,10 +119,18 @@ AUTH_USER_MODEL = 'core.CustomUser'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 CORS_ALLOWED_ORIGINS = ['http://localhost:8081',
                         'http://192.168.178.101']
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'HydrationIQ API',
+    'DESCRIPTION': 'The main functionalities of this API is to generate water intake suggestions based on different physical attributes of the users, their creatine intake, and the weather condition of the area. Users can enter their water intakes manually in order to track it.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': True, # Set to False for production, True for development if you want to see the raw schema
+}
