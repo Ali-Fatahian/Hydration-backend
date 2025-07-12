@@ -24,16 +24,11 @@ from .mixins import IsOwnerMixin
 
 import random
 import csv
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
 
 User = get_user_model()
-WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
-TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY')
-TOGETHER_MODEL = os.getenv('TOGETHER_MODEL')
+WEATHER_API_KEY="1abd54e04598b27a08c1f65af2d7ff2a"
+TOGETHER_API_KEY="61af2e7656babc2a236f7b1602d5cb5a231d547da701b224273ddae2e114620b"
+TOGETHER_MODEL="mistralai/Mistral-7B-Instruct-v0.1"
 
 
 class LoginAPIView(APIView):
